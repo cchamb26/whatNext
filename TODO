@@ -1,0 +1,8 @@
+1. Build out simple front end
+    - Food logging interface, food calendar, chat menu for reccomendation
+2. Connect cheap llm off azure, likely PHI 4 
+    - Low token cost, just needs to suggest a proper food based on time
+    - Could potentially build without any LLM, just make a algo
+3. Connect database to store food entries
+    - Food calendar, as well as data for the LLM to synthesize data
+4. Bug testing and final patches
