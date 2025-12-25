@@ -1,17 +1,17 @@
-const endpoint = process.env.AZURE_ENDPOINT;
-const modelName = process.env.AZURE_MODELNAME
-const deployment = process.env.AZURE_DEPLOYMENT;
-const key = process.env.AZURE_KEY;
-
-
 import { AzureOpenAI } from "openai";
+import "dotenv/config";
+
+const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
+const apiKey = process.env.AZURE_OPENAI_API_KEY;
+const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
+const apiVersion = process.env.AZURE_OPENAI_API_VERSION;
+const modelName = process.env.AZURE_OPENAI_MODEL_NAME;
+
+const options = { endpoint, apiKey, deployment, apiVersion }
+console.log(options);
+
 
 export async function main() {
-
-  const apiKey = "<your-api-key>";
-  const apiVersion = "2024-12-01-preview";
-  const options = { endpoint, apiKey, deployment, apiVersion }
-
   const client = new AzureOpenAI(options);
 
   const response = await client.chat.completions.create({
