@@ -1,34 +1,33 @@
 import { AzureOpenAI } from "openai";
 import "dotenv/config";
-import {foodEntry} from "./types";
+import {foodEntry} from "../types";
 
-const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
-const apiKey = process.env.AZURE_OPENAI_API_KEY;
-const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
-const apiVersion = process.env.AZURE_OPENAI_API_VERSION;
-const modelName = process.env.AZURE_OPENAI_MODEL_NAME;
+export function whatNext(input: foodEntry): string {
+  const {name, hour, minute, mealEvent} = input;
+  return `
+    You are a food recommendation service. Your flow is as follows:
+     1. Food is inputted into a database over a period of time.
+     2. User will ask you what they should eat next.
+     3. A database of food options they have eaten over will be provided to you.
+     4. Based on the values: foodEvent, time, and name, you will output a 
+        reccommendation based ONLY on previous eaten foods, or foods that are SIMILAR 
+        in nature.
+    
+    Previous Food:
+      name: ${name}
+      time: ${hour} + ${minute}
+      mealEvent: ${mealEvent}
+    
+    Output a reccommendation, as well as a simple recipe in this format:
 
-const options = { endpoint, apiKey, deployment, apiVersion }
-console.log(options);
+    Recommendation:
+    <one concise food recommendation>
 
-export function whatNext(input: foodEntry) {
-  const client = new AzureOpenAI(options);
+    Why:
+    <short explanation referencing prior foods or patterns>
 
-  const response = await client.chat.completions.create({
-    messages: [
-      { role:"system", content: "You are " },
-      { role:"user", content: "I am going to Paris, what should I see?" }
-    ],
-    max_completion_tokens: 40000,
-      model: modelName
-  });
-
-  if (response?.error !== undefined && response.status !== "200") {
-    throw response.error;
-  }
-  console.log(response.choices[0].message.content);
-}
-
-main().catch((err) => {
-  console.error("The sample encountered an error:", err);
-});
+    Simple Recipe:
+    - Ingredients: <comma-separated list>
+    - Steps: <2-4 short steps>
+  `;
+};
