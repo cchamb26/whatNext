@@ -1,8 +1,5 @@
-export type foodItem = {
+export type foodEntry = {
     name: string;
-}
-
-export type timeOfDay = {
     hour: number;
     minute: number;
 }
