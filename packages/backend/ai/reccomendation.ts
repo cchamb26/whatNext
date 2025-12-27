@@ -1,5 +1,6 @@
 import { AzureOpenAI } from "openai";
 import "dotenv/config";
+import {foodEntry} from "./types";
 
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
 const apiKey = process.env.AZURE_OPENAI_API_KEY;
@@ -10,13 +11,12 @@ const modelName = process.env.AZURE_OPENAI_MODEL_NAME;
 const options = { endpoint, apiKey, deployment, apiVersion }
 console.log(options);
 
-
-export async function main() {
+export function whatNext(input: foodEntry) {
   const client = new AzureOpenAI(options);
 
   const response = await client.chat.completions.create({
     messages: [
-      { role:"system", content: "You are a helpful assistant." },
+      { role:"system", content: "You are " },
       { role:"user", content: "I am going to Paris, what should I see?" }
     ],
     max_completion_tokens: 40000,
