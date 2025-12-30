@@ -7,3 +7,5 @@ const apiVersion = process.env.AZURE_OPENAI_API_VERSION;
 const modelName = process.env.AZURE_OPENAI_MODEL_NAME;
 
 const options = { endpoint, apiKey, deployment, apiVersion };
+
+
