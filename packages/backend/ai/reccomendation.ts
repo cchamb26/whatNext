@@ -2,7 +2,7 @@ import { AzureOpenAI } from "openai";
 import "dotenv/config";
 import {foodEntry} from "../types";
 
-export function whatNext(input: foodEntry): string {
+export function reccommendation(input: foodEntry): string {
   const {name, hour, minute, mealEvent} = input;
   return `
     You are a food recommendation service. Your flow is as follows:
@@ -18,7 +18,7 @@ export function whatNext(input: foodEntry): string {
       time: ${hour} + ${minute}
       mealEvent: ${mealEvent}
     
-    Output a reccommendation, as well as a simple recipe in this format:
+    Output a STRING in this format:
 
     Recommendation:
     <one concise food recommendation>
