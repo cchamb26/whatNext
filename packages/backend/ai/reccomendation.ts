@@ -2,9 +2,11 @@ import { AzureOpenAI } from "openai";
 import "dotenv/config";
 import {foodEntry} from "../types";
 
-export function reccommendation(input: foodEntry): string {
-  const {name, hour, minute, mealEvent} = input;
-  return `
+export function reccommendation(input: foodEntry[]): string {
+  const foodList = input
+    .map((entry) => `name: ${entry.name}, time: ${entry.hour}:${entry.minute}, mealEvent: ${entry.mealEvent}`)
+    .join("\n  ");
+    return `
     You are a food recommendation service. Your flow is as follows:
      1. Food is inputted into a database over a period of time.
      2. User will ask you what they should eat next.
@@ -13,10 +15,8 @@ export function reccommendation(input: foodEntry): string {
         reccommendation based ONLY on previous eaten foods, or foods that are SIMILAR 
         in nature.
     
-    Previous Food:
-      name: ${name}
-      time: ${hour} + ${minute}
-      mealEvent: ${mealEvent}
+    Previous Foods:
+      ${foodList}
     
     Output a STRING in this format:
 

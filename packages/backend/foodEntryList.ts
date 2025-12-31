@@ -1,4 +1,4 @@
-import { foodEntry } from "../types";
+import { foodEntry } from "./types";
 
 export async function getRecentFoodEntries(limit: number = 30 ): Promise<foodEntry[]>{
     //once DB is setup, finalize method
