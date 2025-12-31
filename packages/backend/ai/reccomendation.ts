@@ -1,4 +1,3 @@
-import { AzureOpenAI } from "openai";
 import "dotenv/config";
 import {foodEntry} from "../types";
 
