@@ -1,6 +1,4 @@
 import OpenAI from "openai";
-import { foodEntry } from "../types";
-import { recommendation } from "./recommendation";
 
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
 const apiKey = process.env.AZURE_OPENAI_API_KEY;
@@ -27,7 +25,7 @@ export async function callLLM(prompt:string): Promise<string> {
       },
       body: JSON.stringify({
         messages: [{ role: "user", content: prompt }], //sends prompt value to bot
-        temperature: 0.4, //formality level
+        temperature: 0.4, //randomness/creativity level
       }),
     });
 
