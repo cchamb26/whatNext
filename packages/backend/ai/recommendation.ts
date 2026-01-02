@@ -1,10 +1,7 @@
 import "dotenv/config";
 import {foodEntry} from "../types";
 
-export function reccommendation(input: foodEntry[]): string {
-  const foodList = input
-    .map((entry) => `name: ${entry.name}, time: ${entry.hour}:${entry.minute}, mealEvent: ${entry.mealEvent}`)
-    .join("\n  ");
+export function recommendation(input: foodEntry[]): string {
     return `
     You are a food recommendation service. Your flow is as follows:
      1. Food is inputted into a database over a period of time.
@@ -15,7 +12,7 @@ export function reccommendation(input: foodEntry[]): string {
         in nature.
     
     Previous Foods:
-      ${foodList}
+      ${input}
     
     Output a STRING in this format:
 

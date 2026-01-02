@@ -1,14 +1,14 @@
 import OpenAI from "openai";
-import { foodEntry  } from "../types";
-import { reccommendation } from "./reccomendation";
+import { foodEntry } from "../types";
+import { recommendation } from "./recommendation";
+import { callLLM } from "./client";
 
-/*const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
-const apiKey = process.env.AZURE_OPENAI_API_KEY;
-const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
-const apiVersion = process.env.AZURE_OPENAI_API_VERSION;
-const modelName = process.env.AZURE_OPENAI_MODEL_NAME;
-
-const options = { endpoint, apiKey, deployment, apiVersion, modelName }; */
-
-
-
+export async function whatNext (
+  input: foodEntry[],
+  ): Promise<String>{
+  const prompt = recommendation(input);
+  const output = await callLLM(prompt);
+  
+  
+  return output;
+}

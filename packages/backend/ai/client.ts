@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { foodEntry } from "../types";
-import { reccommendation } from "./reccomendation";
+import { recommendation } from "./recommendation";
 
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
 const apiKey = process.env.AZURE_OPENAI_API_KEY;
@@ -13,15 +13,13 @@ if (!endpoint || !apiKey || !deployment || !apiVersion) {
   console.warn("[ai] Azure env variables are not fully set.");
 }
 
-export async function callLLM(foodHistory: foodEntry[]): Promise<string> {
+export async function callLLM(prompt:string): Promise<string> {
   try {
     if (!endpoint || !apiKey || !deployment || !apiVersion) {
       throw new Error(
         "Azure config missing (endpoint / key / deployment / version).",
       );
-    }
-
-    const prompt = reccommendation(foodHistory);
+    } 
     
     const response = await fetch(`${endpoint}openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`, {
       method: "POST",
@@ -30,17 +28,17 @@ export async function callLLM(foodHistory: foodEntry[]): Promise<string> {
         "api-key": apiKey,
       },
       body: JSON.stringify({
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.4,
+        messages: [{ role: "user", content: prompt }], //sends prompt value to bot
+        temperature: 0.4, //formality level
       }),
     });
 
-    if (!response.ok) {
+    if (!response.ok) { 
       throw new Error(`Azure OpenAI error ${response.status}`);
     }
 
     const data = await response.json() as { choices: Array<{ message: { content: string } }> };
-    return data.choices[0].message.content;
+    return data.choices[0].message.content; //returns message
 
   } catch (error) {
     console.error("[callLLM] Error: ", error);
