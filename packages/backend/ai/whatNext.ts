@@ -7,7 +7,5 @@ export async function whatNext (
   ): Promise<String>{
   const prompt = recommendation(input);
   const output = await callLLM(prompt);
-  
-  
   return output;
 }
