@@ -36,8 +36,6 @@ class APIService {
     func addMeal(_ meal: Meal) async throws -> Meal {
         let body = MealRequest(
             name: meal.name,
-            hour: meal.hour,
-            minute: meal.minute,
             meal_event: meal.mealEvent.rawValue,
             occurred_at: ISO8601DateFormatter().string(from: meal.occurredAt)
         )
@@ -195,8 +193,6 @@ struct APIMeal: Codable {
 
 struct MealRequest: Codable {
     let name: String
-    let hour: Int
-    let minute: Int
     let meal_event: String
     let occurred_at: String
 }
