@@ -5,7 +5,7 @@
 //  Created by Jack on 1/6/26.
 //
 
-import Foundation
+import SwiftUI
 
 class APIService {
     static let shared = APIService()

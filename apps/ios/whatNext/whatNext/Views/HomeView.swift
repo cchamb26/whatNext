@@ -15,7 +15,7 @@ struct HomeView: View {
             VStack(spacing: 24) {
                 // Header
                 VStack(spacing: 8) {
-                    Text("what next?")
+                    Text("whatNext?")
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                     
                     if APIService.shared.isAuthenticated {
