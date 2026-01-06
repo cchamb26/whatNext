@@ -9,7 +9,6 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(MealStore.self) private var store
-    @State private var hasRequested = false
     
     var body: some View {
         ScrollView {
@@ -18,15 +17,21 @@ struct HomeView: View {
                 VStack(spacing: 8) {
                     Text("what next?")
                         .font(.system(size: 34, weight: .bold, design: .rounded))
-                    Text("\(store.meals.count) meals logged")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    
+                    if APIService.shared.isAuthenticated {
+                        Text("\(store.meals.count) meals logged")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Label("Not connected", systemImage: "wifi.slash")
+                            .font(.subheadline)
+                            .foregroundStyle(.orange)
+                    }
                 }
                 .padding(.top, 20)
                 
                 // Main recommendation button/card
                 Button {
-                    hasRequested = true
                     Task {
                         await store.getRecommendation()
                     }
@@ -36,9 +41,14 @@ struct HomeView: View {
                 .buttonStyle(.plain)
                 .disabled(store.isLoading)
                 
-                // Recipe details (shown after request)
-                if hasRequested && !store.recommendation.ingredients.isEmpty {
-                    recipeCard
+                // Error message
+                if let error = store.errorMessage {
+                    errorCard(message: error)
+                }
+                
+                // Recipe details
+                if let rec = store.recommendation, !rec.ingredients.isEmpty {
+                    recipeCard(rec)
                 }
                 
                 // Recent meals preview
@@ -63,21 +73,36 @@ struct HomeView: View {
                 ProgressView()
                     .scaleEffect(1.2)
                     .frame(height: 60)
-            } else {
-                Image(systemName: hasRequested ? "fork.knife" : "sparkles")
+                Text("Getting recommendation...")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            } else if let rec = store.recommendation {
+                Image(systemName: "fork.knife")
                     .font(.system(size: 32))
                     .foregroundStyle(.orange)
                 
-                Text(store.recommendation.food)
+                Text(rec.food)
                     .font(.title2.bold())
                     .multilineTextAlignment(.center)
                 
-                if !store.recommendation.reason.isEmpty {
-                    Text(store.recommendation.reason)
+                if !rec.reason.isEmpty {
+                    Text(rec.reason)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
+            } else {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 32))
+                    .foregroundStyle(.orange)
+                
+                Text("Tap to get a recommendation")
+                    .font(.title2.bold())
+                    .multilineTextAlignment(.center)
+                
+                Text("Requires backend connection")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity)
@@ -88,9 +113,25 @@ struct HomeView: View {
         .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
     }
     
+    // MARK: - Error Card
+    
+    private func errorCard(message: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.red)
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(16)
+        .background(Color.red.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+    
     // MARK: - Recipe Card
     
-    private var recipeCard: some View {
+    private func recipeCard(_ rec: Recommendation) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Simple Recipe")
                 .font(.headline)
@@ -100,7 +141,7 @@ struct HomeView: View {
                     .font(.subheadline.bold())
                     .foregroundStyle(.orange)
                 
-                Text(store.recommendation.ingredients.joined(separator: " • "))
+                Text(rec.ingredients.joined(separator: " • "))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -110,7 +151,7 @@ struct HomeView: View {
                     .font(.subheadline.bold())
                     .foregroundStyle(.orange)
                 
-                ForEach(Array(store.recommendation.steps.enumerated()), id: \.offset) { index, step in
+                ForEach(Array(rec.steps.enumerated()), id: \.offset) { index, step in
                     HStack(alignment: .top, spacing: 8) {
                         Text("\(index + 1).")
                             .font(.subheadline.bold())

@@ -21,6 +21,11 @@ struct AppRootView: View {
                 AddItemView()
             }
             .tabItem { Label("Add", systemImage: "plus") }
+            
+            NavigationStack {
+                SettingsView()
+            }
+            .tabItem { Label("Settings", systemImage: "gear") }
         }
         .tint(.orange)
         .environment(store)

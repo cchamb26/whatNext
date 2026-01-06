@@ -9,12 +9,12 @@ import SwiftUI
 
 struct AddItemView: View {
     @Environment(MealStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
     
     @State private var name: String = ""
     @State private var mealEvent: MealEvent = .lunch
     @State private var time: Date = Date()
     @State private var showingConfirmation = false
+    @State private var isSaving = false
     
     var body: some View {
         Form {
@@ -40,16 +40,38 @@ struct AddItemView: View {
             
             Section {
                 Button {
-                    saveMeal()
+                    Task { await saveMeal() }
                 } label: {
                     HStack {
                         Spacer()
+                        if isSaving {
+                            ProgressView()
+                                .padding(.trailing, 8)
+                        }
                         Text("Save Meal")
                             .fontWeight(.semibold)
                         Spacer()
                     }
                 }
-                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || isSaving)
+            }
+            
+            if let error = store.errorMessage {
+                Section {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(.orange)
+                        .font(.subheadline)
+                }
+            }
+            
+            if !APIService.shared.isAuthenticated {
+                Section {
+                    Label("Not connected to backend", systemImage: "wifi.slash")
+                        .foregroundStyle(.secondary)
+                        .font(.subheadline)
+                } footer: {
+                    Text("Meals will be saved locally. Add your token in Settings to sync.")
+                }
             }
         }
         .navigationTitle("Add Meal")
@@ -74,7 +96,7 @@ struct AddItemView: View {
         .transition(.scale.combined(with: .opacity))
     }
     
-    private func saveMeal() {
+    private func saveMeal() async {
         let calendar = Calendar.current
         let hour = calendar.component(.hour, from: time)
         let minute = calendar.component(.minute, from: time)
@@ -87,7 +109,9 @@ struct AddItemView: View {
             occurredAt: time
         )
         
-        store.addMeal(meal)
+        isSaving = true
+        await store.addMeal(meal)
+        isSaving = false
         
         // Show confirmation
         withAnimation(.spring(duration: 0.3)) {
@@ -95,12 +119,11 @@ struct AddItemView: View {
         }
         
         // Reset form
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            withAnimation {
-                showingConfirmation = false
-            }
-            name = ""
-            time = Date()
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        withAnimation {
+            showingConfirmation = false
         }
+        name = ""
+        time = Date()
     }
 }

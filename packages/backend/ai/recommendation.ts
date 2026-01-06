@@ -1,8 +1,7 @@
-import "dotenv/config";
-import {foodEntry} from "../types";
+import { foodEntry } from "../types";
 
 export function recommendation(input: foodEntry[]): string {
-    return `
+  return `
     You are a food recommendation service. Your flow is as follows:
      1. Food is inputted into a database over a period of time.
      2. User will ask you what they should eat next.
@@ -12,7 +11,7 @@ export function recommendation(input: foodEntry[]): string {
         in nature.
     
     Previous Foods:
-      ${input}
+      ${JSON.stringify(input, null, 2)}
     
     Output a STRING in this format:
 
@@ -26,4 +25,4 @@ export function recommendation(input: foodEntry[]): string {
     - Ingredients: <comma-separated list>
     - Steps: <2-4 short steps>
   `;
-};
+}

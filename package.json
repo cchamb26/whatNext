@@ -1,5 +1,9 @@
 {
   "type": "module",
+  "scripts": {
+    "dev": "tsx watch packages/backend/database/server.ts",
+    "start": "tsx packages/backend/database/server.ts"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
     "dotenv": "^17.2.3",
@@ -7,6 +11,9 @@
     "openai": "^6.15.0"
   },
   "devDependencies": {
-    "@types/node": "^25.0.3"
+    "@types/express": "^5.0.0",
+    "@types/node": "^25.0.3",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
   }
 }
