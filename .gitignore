@@ -16,3 +16,26 @@ yarn-error.log*
 pnpm-debug.log*
 dist/
 build/
+
+# Swift / SwiftPM
+.build/
+Packages/
+Package.resolved
+.swiftpm/
+*.xcodeproj
+*.xcworkspace
+
+# Swiftly (if ever used)
+.swiftly/
+
+# VS Code
+.vscode/
+
+# Linux / Arch
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Binaries
+*.out
