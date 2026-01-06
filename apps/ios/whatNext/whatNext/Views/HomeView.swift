@@ -9,11 +9,19 @@ import SwiftUI
 
 struct HomeView: View {
     var body: some View {
-        VStack(spacing: 12) {
-            Text("Get Recommendation").font(.title).bold()
+        ZStack {
+            Color("HomeViewBackground")
+                .ignoresSafeArea()
+            
+            VStack(spacing: 12) {
+                Button("Get Recommendation") {
+                    //do something
+                }
+            }
+            .padding()
         }
-        
-        .padding()
+
         .navigationTitle("Home")
     }
+    
 }

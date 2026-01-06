@@ -22,5 +22,6 @@ struct AddItemView: View {
             }
             .navigationTitle("Add")
         }
+        
     }
 }
