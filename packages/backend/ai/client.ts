@@ -25,7 +25,6 @@ export async function callLLM(prompt:string): Promise<string> {
       },
       body: JSON.stringify({
         messages: [{ role: "user", content: prompt }], //sends prompt value to bot
-        temperature: 0.4, //randomness/creativity level
       }),
     });
 
