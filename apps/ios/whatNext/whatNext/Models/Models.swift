@@ -8,10 +8,10 @@
 import Foundation
 
 enum MealEvent: String, CaseIterable, Codable {
-    case breakfast = "breakfast"
-    case lunch = "lunch"
-    case dinner = "dinner"
-    case snack = "snack"
+    case breakfast = "Breakfast"
+    case lunch = "Lunch"
+    case dinner = "Dinner"
+    case snack = "Snack"
     
     var icon: String {
         switch self {

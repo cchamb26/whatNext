@@ -35,12 +35,27 @@ async function authenticateRequest(req: Request): Promise<AuthResult> {
   return { user, jwt };
 }
 
+// Root endpoint - API info
+app.get("/", (_req: Request, res: Response) => {
+  res.json({
+    name: "whatNext API",
+    status: "running",
+    endpoints: {
+      "GET /test": "Health check",
+      "GET /meals/latest": "Get recent meals (requires auth)",
+      "POST /meals": "Add a meal (requires auth)",
+      "DELETE /meals/:id": "Delete a meal (requires auth)",
+      "POST /recommend": "Get AI recommendation (requires auth)",
+    },
+  });
+});
+
 // Test endpoint
 app.get("/test", (_req: Request, res: Response) => {
   res.json({ message: "Server is running" });
 });
 
-// GET /meals/latest - fetch recent meals
+// GET /meals/latest - fetch recent meals with foods
 app.get("/meals/latest", async (req: Request, res: Response) => {
   const authResult = await authenticateRequest(req);
   if (authResult.error) {
@@ -49,9 +64,21 @@ app.get("/meals/latest", async (req: Request, res: Response) => {
 
   const userClient = createUserClient(authResult.jwt!);
 
+  // Fetch meals with their food items
   const { data, error } = await userClient
     .from("meals")
-    .select("*")
+    .select(`
+      id,
+      occurred_at,
+      meal_type,
+      meal_items (
+        food_id,
+        foods (
+          id,
+          name
+        )
+      )
+    `)
     .order("occurred_at", { ascending: false })
     .limit(30);
 
@@ -59,9 +86,27 @@ app.get("/meals/latest", async (req: Request, res: Response) => {
     return res.status(400).json({ error: error.message });
   }
 
+  // Transform to simpler format for the iOS app
+  const meals = data?.map((meal: any) => {
+    const occurredAt = new Date(meal.occurred_at);
+    const foodNames = meal.meal_items
+      ?.map((item: any) => item.foods?.name)
+      .filter(Boolean)
+      .join(", ");
+
+    return {
+      id: meal.id,
+      name: foodNames || "Unknown",
+      hour: occurredAt.getHours(),
+      minute: occurredAt.getMinutes(),
+      meal_event: meal.meal_type,
+      occurred_at: meal.occurred_at,
+    };
+  });
+
   res.json({
     user_id: authResult.user!.id,
-    meals: data,
+    meals: meals || [],
   });
 });
 
@@ -72,37 +117,86 @@ app.post("/meals", async (req: Request, res: Response) => {
     return res.status(authResult.status!).json({ error: authResult.error });
   }
 
-  const { name, hour, minute, meal_event, occurred_at } = req.body;
+  const { name, meal_event, occurred_at } = req.body;
 
-  if (!name || hour === undefined || minute === undefined || !meal_event) {
-    return res
-      .status(400)
-      .json({ error: "Missing required fields: name, hour, minute, meal_event" });
+  if (!name || !meal_event) {
+    return res.status(400).json({ error: "Missing required fields: name, meal_event" });
   }
 
   const userClient = createUserClient(authResult.jwt!);
+  const userId = authResult.user!.id;
+  const normalizedName = name.toLowerCase().trim();
 
-  const { data, error } = await userClient
-    .from("meals")
-    .insert({
-      user_id: authResult.user!.id,
-      name,
-      hour,
-      minute,
-      meal_event,
-      occurred_at: occurred_at || new Date().toISOString(),
-    })
-    .select()
+  // 1. Find or create the food
+  let { data: existingFood } = await userClient
+    .from("foods")
+    .select("id")
+    .eq("normalized_name", normalizedName)
     .single();
 
-  if (error) {
-    return res.status(400).json({ error: error.message });
+  let foodId: string;
+
+  if (existingFood) {
+    foodId = existingFood.id;
+  } else {
+    const { data: newFood, error: foodError } = await userClient
+      .from("foods")
+      .insert({
+        user_id: userId,
+        name: name.trim(),
+        normalized_name: normalizedName,
+      })
+      .select("id")
+      .single();
+
+    if (foodError) {
+      return res.status(400).json({ error: foodError.message });
+    }
+    foodId = newFood.id;
   }
 
-  res.status(201).json({ meal: data });
+  // 2. Create the meal
+  const { data: meal, error: mealError } = await userClient
+    .from("meals")
+    .insert({
+      user_id: userId,
+      meal_type: meal_event,
+      occurred_at: occurred_at || new Date().toISOString(),
+    })
+    .select("id, occurred_at, meal_type")
+    .single();
+
+  if (mealError) {
+    return res.status(400).json({ error: mealError.message });
+  }
+
+  // 3. Link meal to food via meal_items
+  const { error: linkError } = await userClient
+    .from("meal_items")
+    .insert({
+      user_id: userId,
+      meal_id: meal.id,
+      food_id: foodId,
+    });
+
+  if (linkError) {
+    return res.status(400).json({ error: linkError.message });
+  }
+
+  const occurredAt = new Date(meal.occurred_at);
+  res.status(201).json({
+    meal: {
+      id: meal.id,
+      name: name.trim(),
+      hour: occurredAt.getHours(),
+      minute: occurredAt.getMinutes(),
+      meal_event: meal.meal_type,
+      occurred_at: meal.occurred_at,
+    },
+  });
 });
 
-// DELETE /meals/:id - delete a meal
+// DELETE /meals/:id - delete a meal (meal_items cascade automatically)
 app.delete("/meals/:id", async (req: Request, res: Response) => {
   const authResult = await authenticateRequest(req);
   if (authResult.error) {
@@ -132,10 +226,19 @@ app.post("/recommend", async (req: Request, res: Response) => {
 
   const userClient = createUserClient(authResult.jwt!);
 
-  // Fetch recent meals
+  // Fetch recent meals with foods
   const { data: meals, error: fetchError } = await userClient
     .from("meals")
-    .select("*")
+    .select(`
+      id,
+      occurred_at,
+      meal_type,
+      meal_items (
+        foods (
+          name
+        )
+      )
+    `)
     .order("occurred_at", { ascending: false })
     .limit(30);
 
@@ -148,12 +251,20 @@ app.post("/recommend", async (req: Request, res: Response) => {
   }
 
   // Convert to foodEntry format for AI
-  const foodEntries = meals.map((m) => ({
-    name: m.name,
-    hour: m.hour,
-    minute: m.minute,
-    mealEvent: m.meal_event,
-  }));
+  const foodEntries = meals.map((meal: any) => {
+    const occurredAt = new Date(meal.occurred_at);
+    const foodNames = meal.meal_items
+      ?.map((item: any) => item.foods?.name)
+      .filter(Boolean)
+      .join(", ");
+
+    return {
+      name: foodNames || "Unknown",
+      hour: occurredAt.getHours(),
+      minute: occurredAt.getMinutes(),
+      mealEvent: meal.meal_type,
+    };
+  });
 
   try {
     const recommendation = await whatNext(foodEntries);
@@ -168,4 +279,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-
