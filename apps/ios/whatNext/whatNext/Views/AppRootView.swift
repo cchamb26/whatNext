@@ -8,17 +8,21 @@
 import SwiftUI
 
 struct AppRootView: View {
+    @State private var store = MealStore()
+    
     var body: some View {
         TabView {
             NavigationStack {
                 HomeView()
             }
-            .tabItem {Label("Home", systemImage: "house")}
+            .tabItem { Label("Home", systemImage: "house") }
             
             NavigationStack {
                 AddItemView()
             }
-            .tabItem {Label("Add", systemImage: "plus")}
+            .tabItem { Label("Add", systemImage: "plus") }
         }
+        .tint(.orange)
+        .environment(store)
     }
 }
