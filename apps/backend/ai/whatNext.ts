@@ -1,4 +1,4 @@
-import { foodEntry } from "../types";
+import { foodEntry } from "./types";
 import { recommendation } from "./recommendation";
 import { callLLM } from "./client";
 

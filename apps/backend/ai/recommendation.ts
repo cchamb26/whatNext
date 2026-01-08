@@ -1,5 +1,5 @@
 import "dotenv/config";
-import {foodEntry} from "../types";
+import {foodEntry} from "./types";
 
 export function recommendation(input: foodEntry[]): string {
     return `

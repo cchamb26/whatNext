@@ -17,7 +17,7 @@
   },
   "include": [
     "packages/**/*"
-  ],
+, "apps/backend/ai/foodEntryList.ts", "apps/backend/ai/types.ts"  ],
   "exclude": [
     "node_modules",
     "dist"
