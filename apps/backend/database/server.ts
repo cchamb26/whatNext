@@ -55,6 +55,11 @@ app.get("/test", (_req: Request, res: Response) => {
   res.json({ message: "Server is running" });
 });
 
+// Health check endpoint (Azure App Service)
+app.get("/health", (_req: Request, res: Response) => {
+  res.status(200).json({ status: "healthy" });
+});
+
 // GET /meals/latest - fetch recent meals with foods
 app.get("/meals/latest", async (req: Request, res: Response) => {
   const authResult = await authenticateRequest(req);
