@@ -1,6 +1,6 @@
-import { foodEntry } from "../types";
-import { recommendation } from "./recommendation";
-import { callLLM } from "./client";
+import { foodEntry } from "../types.js";
+import { recommendation } from "./recommendation.js";
+import { callLLM } from "./client.js";
 
 export async function whatNext (
   input: foodEntry[],

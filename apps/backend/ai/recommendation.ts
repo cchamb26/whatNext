@@ -1,4 +1,4 @@
-import { foodEntry } from "../types";
+import { foodEntry } from "../types.js";
 
 export function recommendation(input: foodEntry[]): string {
   return `

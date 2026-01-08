@@ -1,8 +1,8 @@
 import "dotenv/config";
 import express, { Request, Response } from "express";
-import { validatorClient } from "./validatorClient";
-import { createUserClient } from "./userClient";
-import { whatNext } from "../ai/whatNext";
+import { validatorClient } from "./validatorClient.js";
+import { createUserClient } from "./userClient.js";
+import { whatNext } from "../ai/whatNext.js";
 
 const app = express();
 app.use(express.json());

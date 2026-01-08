@@ -5,7 +5,10 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
 
 export function createUserClient(jwt: string): SupabaseClient {
-  return createClient(supabaseUrl || "", supabaseKey || "", {
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY must be set");
+  }
+  return createClient(supabaseUrl, supabaseKey, {
     global: {
       headers: { Authorization: `Bearer ${jwt}` },
     },
