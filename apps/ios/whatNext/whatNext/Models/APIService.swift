@@ -12,7 +12,7 @@ class APIService {
     
     // Configure your backend URL here
     var baseURL: String {
-        get { UserDefaults.standard.string(forKey: "baseURL") ?? "http://localhost:3000" }
+        get { UserDefaults.standard.string(forKey: "baseURL") ?? "https://whatnext-api.azuremicrosoft.net" }
         set { UserDefaults.standard.set(newValue, forKey: "baseURL") }
     }
     
@@ -105,55 +105,28 @@ class APIService {
     // MARK: - Parse AI Response
     
     private func parseRecommendation(from text: String) -> Recommendation {
-        var food = ""
-        var reason = ""
-        var ingredients: [String] = []
-        var steps: [String] = []
-        
-        let lines = text.components(separatedBy: "\n")
-        var currentSection = ""
-        
-        for line in lines {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            
-            if trimmed.lowercased().hasPrefix("recommendation:") {
-                currentSection = "food"
-                let value = trimmed.dropFirst("recommendation:".count).trimmingCharacters(in: .whitespaces)
-                if !value.isEmpty { food = value }
-            } else if trimmed.lowercased().hasPrefix("why:") {
-                currentSection = "reason"
-                let value = trimmed.dropFirst("why:".count).trimmingCharacters(in: .whitespaces)
-                if !value.isEmpty { reason = value }
-            } else if trimmed.lowercased().contains("ingredients:") {
-                currentSection = "ingredients"
-                let value = trimmed.components(separatedBy: ":").dropFirst().joined(separator: ":").trimmingCharacters(in: .whitespaces)
-                if !value.isEmpty {
-                    ingredients = value.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-                }
-            } else if trimmed.lowercased().contains("steps:") {
-                currentSection = "steps"
-                let value = trimmed.components(separatedBy: ":").dropFirst().joined(separator: ":").trimmingCharacters(in: .whitespaces)
-                if !value.isEmpty { steps.append(value) }
-            } else if !trimmed.isEmpty {
-                switch currentSection {
-                case "food": food = trimmed
-                case "reason": reason += (reason.isEmpty ? "" : " ") + trimmed
-                case "steps":
-                    let step = trimmed.trimmingCharacters(in: CharacterSet(charactersIn: "- •0123456789."))
-                        .trimmingCharacters(in: .whitespaces)
-                    if !step.isEmpty { steps.append(step) }
-                default: break
-                }
-            }
+        // Try to parse as JSON
+        if let data = text.data(using: .utf8),
+           let json = try? JSONDecoder().decode(RecommendationJSON.self, from: data) {
+            return Recommendation(
+                food: json.food,
+                reason: json.reason,
+                ingredients: json.ingredients,
+                steps: json.steps
+            )
         }
         
-        return Recommendation(
-            food: food.isEmpty ? text : food,
-            reason: reason,
-            ingredients: ingredients,
-            steps: steps
-        )
+        // Fallback if JSON parsing fails
+        return Recommendation(food: text, reason: "", ingredients: [], steps: [])
     }
+}
+
+// JSON structure for AI recommendation response
+struct RecommendationJSON: Codable {
+    let food: String
+    let reason: String
+    let ingredients: [String]
+    let steps: [String]
 }
 
 // MARK: - API Models
