@@ -10,9 +10,12 @@ import SwiftUI
 @Observable
 class MealStore {
     var meals: [Meal] = []
+    var mealsForSelectedDate: [Meal] = []
+    var selectedDate: Date = Date()
     var recommendation: Recommendation?
     var isLoading: Bool = false
     var isSyncing: Bool = false
+    var isLoadingDateMeals: Bool = false
     var errorMessage: String?
     
     private let storageKey = "savedMeals"
@@ -28,6 +31,12 @@ class MealStore {
         // Add locally for instant feedback
         meals.insert(meal, at: 0)
         saveLocalMeals()
+        
+        // Also add to date-filtered list if same date
+        if Calendar.current.isDate(meal.occurredAt, inSameDayAs: selectedDate) {
+            mealsForSelectedDate.append(meal)
+            mealsForSelectedDate.sort { $0.occurredAt < $1.occurredAt }
+        }
         
         // Sync to backend
         guard api.isAuthenticated else {
@@ -57,6 +66,18 @@ class MealStore {
         }
     }
     
+    func deleteMealForDate(_ meal: Meal) {
+        mealsForSelectedDate.removeAll { $0.id == meal.id }
+        meals.removeAll { $0.id == meal.id }
+        saveLocalMeals()
+        
+        guard api.isAuthenticated else { return }
+        
+        Task {
+            try? await api.deleteMeal(id: meal.id.uuidString)
+        }
+    }
+    
     func syncMeals() async {
         guard api.isAuthenticated else {
             errorMessage = "Not authenticated"
@@ -75,6 +96,33 @@ class MealStore {
         }
         
         isSyncing = false
+    }
+    
+    func fetchMeals(for date: Date) async {
+        selectedDate = date
+        
+        guard api.isAuthenticated else {
+            // Filter local meals for the selected date
+            mealsForSelectedDate = meals.filter {
+                Calendar.current.isDate($0.occurredAt, inSameDayAs: date)
+            }.sorted { $0.occurredAt < $1.occurredAt }
+            return
+        }
+        
+        isLoadingDateMeals = true
+        errorMessage = nil
+        
+        do {
+            mealsForSelectedDate = try await api.fetchMeals(for: date)
+        } catch {
+            errorMessage = error.localizedDescription
+            // Fallback to local
+            mealsForSelectedDate = meals.filter {
+                Calendar.current.isDate($0.occurredAt, inSameDayAs: date)
+            }.sorted { $0.occurredAt < $1.occurredAt }
+        }
+        
+        isLoadingDateMeals = false
     }
     
     // MARK: - Recommendation

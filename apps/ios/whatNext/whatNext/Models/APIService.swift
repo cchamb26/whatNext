@@ -33,6 +33,17 @@ class APIService {
         return response.meals.map { $0.toMeal() }
     }
     
+    func fetchMeals(for date: Date) async throws -> [Meal] {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone.current
+        let dateString = formatter.string(from: date)
+        
+        let data = try await request(endpoint: "/meals?date=\(dateString)", method: "GET")
+        let response = try JSONDecoder().decode(MealsForDateResponse.self, from: data)
+        return response.meals.map { $0.toMeal() }
+    }
+    
     func addMeal(_ meal: Meal) async throws -> Meal {
         let body = MealRequest(
             name: meal.name,
@@ -132,6 +143,12 @@ struct RecommendationJSON: Codable {
 // MARK: - API Models
 
 struct MealsResponse: Codable {
+    let user_id: String
+    let meals: [APIMeal]
+}
+
+struct MealsForDateResponse: Codable {
+    let date: String
     let user_id: String
     let meals: [APIMeal]
 }

@@ -42,6 +42,7 @@ app.get("/", (_req: Request, res: Response) => {
     status: "running",
     endpoints: {
       "GET /test": "Health check",
+      "GET /meals?date=YYYY-MM-DD": "Get meals for a specific date (requires auth)",
       "GET /meals/latest": "Get recent meals (requires auth)",
       "POST /meals": "Add a meal (requires auth)",
       "DELETE /meals/:id": "Delete a meal (requires auth)",
@@ -58,6 +59,80 @@ app.get("/test", (_req: Request, res: Response) => {
 // Health check endpoint (Azure App Service)
 app.get("/health", (_req: Request, res: Response) => {
   res.status(200).json({ status: "healthy" });
+});
+
+// GET /meals - fetch meals for a specific date (query param: date=YYYY-MM-DD)
+app.get("/meals", async (req: Request, res: Response) => {
+  const authResult = await authenticateRequest(req);
+  if (authResult.error) {
+    return res.status(authResult.status!).json({ error: authResult.error });
+  }
+
+  const { date } = req.query;
+  
+  if (!date || typeof date !== "string") {
+    return res.status(400).json({ error: "Missing required query param: date (YYYY-MM-DD)" });
+  }
+
+  // Parse date and create start/end of day boundaries
+  // The client sends local date, we query UTC timestamps
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(date)) {
+    return res.status(400).json({ error: "Invalid date format. Use YYYY-MM-DD" });
+  }
+
+  // Client sends their local date. We'll query for that calendar day.
+  // The client should send timezone offset if precise filtering needed.
+  // For now, we assume the date is in the user's local context.
+  const startOfDay = `${date}T00:00:00.000Z`;
+  const endOfDay = `${date}T23:59:59.999Z`;
+
+  const userClient = createUserClient(authResult.jwt!);
+
+  const { data, error } = await userClient
+    .from("meals")
+    .select(`
+      id,
+      occurred_at,
+      meal_type,
+      meal_items (
+        food_id,
+        foods (
+          id,
+          name
+        )
+      )
+    `)
+    .gte("occurred_at", startOfDay)
+    .lte("occurred_at", endOfDay)
+    .order("occurred_at", { ascending: true });
+
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
+  const meals = data?.map((meal: any) => {
+    const occurredAt = new Date(meal.occurred_at);
+    const foodNames = meal.meal_items
+      ?.map((item: any) => item.foods?.name)
+      .filter(Boolean)
+      .join(", ");
+
+    return {
+      id: meal.id,
+      name: foodNames || "Unknown",
+      hour: occurredAt.getUTCHours(),
+      minute: occurredAt.getUTCMinutes(),
+      meal_event: meal.meal_type,
+      occurred_at: meal.occurred_at,
+    };
+  });
+
+  res.json({
+    date,
+    user_id: authResult.user!.id,
+    meals: meals || [],
+  });
 });
 
 // GET /meals/latest - fetch recent meals with foods

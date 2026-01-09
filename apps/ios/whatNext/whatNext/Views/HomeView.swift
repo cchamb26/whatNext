@@ -308,17 +308,12 @@ struct HomeView: View {
                 .foregroundStyle(.orange)
                 .frame(width: 24)
             
-            VStack(alignment: .leading, spacing: 2) {
-                Text(meal.name)
-                    .font(.subheadline)
-                Text(meal.mealEvent.rawValue)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
+            Text(meal.name)
+                .font(.subheadline)
             
             Spacer()
             
-            Text(meal.timeString)
+            Text(meal.mealEvent.rawValue)
                 .font(.caption)
                 .foregroundStyle(.tertiary)
             
