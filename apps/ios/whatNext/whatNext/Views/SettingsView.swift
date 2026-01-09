@@ -38,7 +38,7 @@ struct SettingsView: View {
             } header: {
                 Text("Backend")
             } footer: {
-                Text("Default: http://localhost:3000")
+                Text("Default: https://whatnext-api.azurewebsites.net")
             }
             
             Section {
