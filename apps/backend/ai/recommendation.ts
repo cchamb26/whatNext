@@ -20,5 +20,5 @@ Respond with ONLY a valid JSON object in this exact format (no markdown, no code
   "reason": "short explanation referencing prior foods or patterns",
   "ingredients": ["ingredient1", "ingredient2", "ingredient3"],
   "steps": ["step 1", "step 2", "step 3"]
-}
+}`;
 }
