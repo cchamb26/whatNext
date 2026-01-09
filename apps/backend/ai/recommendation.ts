@@ -9,20 +9,16 @@ export function recommendation(input: foodEntry[]): string {
      4. Based on the values: foodEvent, time, and name, you will output a 
         reccommendation based ONLY on previous eaten foods, or foods that are SIMILAR 
         in nature.
-    
+  
+
     Previous Foods:
-      ${JSON.stringify(input, null, 2)}
-    
-    Output a STRING in this format:
+${JSON.stringify(input, null, 2)}
 
-    Recommendation:
-    <one concise food recommendation>
-
-    Why:
-    <short explanation referencing prior foods or patterns>
-
-    Simple Recipe:
-    - Ingredients: <comma-separated list>
-    - Steps: <2-4 short steps>
-  `;
+Respond with ONLY a valid JSON object in this exact format (no markdown, no code blocks, no extra text):
+{
+  "food": "one concise food recommendation",
+  "reason": "short explanation referencing prior foods or patterns",
+  "ingredients": ["ingredient1", "ingredient2", "ingredient3"],
+  "steps": ["step 1", "step 2", "step 3"]
+}
 }
